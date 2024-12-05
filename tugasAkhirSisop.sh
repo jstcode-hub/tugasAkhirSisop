@@ -204,6 +204,22 @@ konversiMataUang() {
     echo "Hasil konversi: $hasil dalam mata uang asing."
 }
 
+hitungKalori() {
+    echo "Masukkan nama makanan:"
+    read makanan
+    
+    echo "Masukkan jumlah makanan (dalam gram):"
+    read jumlah
+    
+    echo "Masukkan nilai kalori per 100 gram (dalam kalori):"
+    read kalori_per_100g
+    
+    # Menghitung total kalori
+    total_kalori=$(( (jumlah * kalori_per_100g) / 100 ))
+    
+    echo "Anda telah mengonsumsi $total_kalori kalori dari $jumlah gram $makanan."
+}
+
 # Menu utama
 echo "Pilih program yang mau dijalankan:"
 echo "1. Manipulasi hak akses"
@@ -211,6 +227,7 @@ echo "2. Membuka aplikasi"
 echo "3. Kalkulator suhu"
 echo "4. Menghitung luas bangun datar"
 echo "5. Konversi mata uang"
+echo "6. Menghitung kalori"
 
 read pilihan
 
@@ -225,6 +242,8 @@ elif [ "$pilihan" -eq 4 ]; then
     menghitungLuasVolume
 elif [ "$pilihan" -eq 5 ]; then
     konversiMataUang
+elif [ "$pilihan" -eq 6 ]; then
+    hitungKalori
 else
     echo "Pilihan tidak valid."
 fi
