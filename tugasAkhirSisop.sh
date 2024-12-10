@@ -1,30 +1,68 @@
 #!/bin/bash
 
 manipulasiHakAkses() {
-    echo "Masukkan nama file (tanpa ekstensi):"
-    read file
-    file="${file}.sh"
-    touch "$file" # Membuat file jika belum ada
-    echo "File $file telah dibuat atau sudah ada."
+    echo "Apakah Anda ingin memanipulasi hak akses file atau direktori? (file/direktori)"
+    read jenis
 
-    echo "Pilih operasi:"
-    echo "1: Tambah hak akses"
-    echo "2: Hapus hak akses"
+    echo "Apakah Anda ingin memanipulasi file/direktori yang sudah ada atau membuat baru? (sudah/membuat)"
+    read pilihan
+
+    if [ "$pilihan" = "membuat" ]; then
+        echo "Masukkan nama file/direktori baru:"
+        read nama_baru
+        if [ "$jenis" = "file" ]; then
+            touch "$nama_baru"
+        else
+            mkdir "$nama_baru"
+        fi
+        target="$nama_baru"
+    else
+        echo "Masukkan nama file/direktori yang akan dimanipulasi:"
+        read target
+    fi
+
+    if [ ! -e "$target" ]; then
+        echo "File atau direktori $target tidak ditemukan!"
+        return
+    fi
+
+    echo "Apakah Anda ingin memasukkan file/direktori ini ke dalam grup baru? (ya/tidak)"
+    read ubah_grup
+
+    if [ "$ubah_grup" = "ya" ]; then
+        echo "Masukkan nama grup baru:"
+        read nama_grup
+        if ! grep -q "^$nama_grup:" /etc/group; then
+            echo "Grup $nama_grup belum ada, membuat grup baru..."
+            sudo groupadd "$nama_grup"
+        else
+            echo "Grup $nama_grup sudah ada."
+        fi
+        echo "Mengubah kepemilikan grup untuk $target ke $nama_grup..."
+        sudo chgrp "$nama_grup" "$target"
+        echo "Kepemilikan grup telah diubah."
+    fi
+
+    echo "Apakah Anda ingin menambahkan atau menghapus hak akses? (tambah/hapus)"
     read operasi
 
-    if [ "$operasi" -eq 1 ]; then
-        echo "Hak akses apa yang ingin ditambahkan? (contoh: +x untuk execute):"
-        read hak
-        chmod "$hak" "$file"
-        echo "Hak akses $hak telah ditambahkan ke $file"
-    elif [ "$operasi" -eq 2 ]; then
-        echo "Hak akses apa yang ingin dihapus? (contoh: -x untuk execute):"
-        read hak
-        chmod "$hak" "$file"
-        echo "Hak akses $hak telah dihapus dari $file"
+    echo "Pilih target hak akses: (user/u, grup/g, others/o, semua/a)"
+    read target_hak
+
+    echo "Masukkan hak akses yang akan dimanipulasi (r, w, x):"
+    read hak_akses
+
+    if [ "$operasi" = "tambah" ]; then
+        chmod "$target_hak+$hak_akses" "$target"
+        echo "Hak akses $hak_akses telah ditambahkan pada $target untuk $target_hak."
+    elif [ "$operasi" = "hapus" ]; then
+        chmod "$target_hak-$hak_akses" "$target"
+        echo "Hak akses $hak_akses telah dihapus dari $target untuk $target_hak."
     else
-        echo "Operasi tidak valid. Silakan coba lagi."
+        echo "Operasi tidak valid."
     fi
+
+    echo "Operasi selesai dilakukan pada $target."
 }
 
 # Fungsi untuk membuka aplikasi
@@ -57,36 +95,32 @@ kalkulatorSuhu() {
     hasil=0
 
     if [ "$asal" -eq 1 ]; then
-        # Dari Celsius
         case "$tujuan" in
-            1) hasil=$suhu ;; # Celsius ke Celsius
-            2) hasil=$(echo "scale=2; ($suhu * 9/5) + 32" | bc) ;; # Celsius ke Fahrenheit
-            3) hasil=$(echo "scale=2; $suhu + 273.15" | bc) ;; # Celsius ke Kelvin
-            4) hasil=$(echo "scale=2; $suhu * 4/5" | bc) ;; # Celsius ke Reamur
+            1) hasil=$suhu ;;
+            2) hasil=$(echo "scale=2; ($suhu * 9/5) + 32" | bc) ;;
+            3) hasil=$(echo "scale=2; $suhu + 273.15" | bc) ;;
+            4) hasil=$(echo "scale=2; $suhu * 4/5" | bc) ;;
         esac
     elif [ "$asal" -eq 2 ]; then
-        # Dari Fahrenheit
         case "$tujuan" in
-            1) hasil=$(echo "scale=2; ($suhu - 32) * 5/9" | bc) ;; # Fahrenheit ke Celsius
-            2) hasil=$suhu ;; # Fahrenheit ke Fahrenheit
-            3) hasil=$(echo "scale=2; (($suhu - 32) * 5/9) + 273.15" | bc) ;; # Fahrenheit ke Kelvin
-            4) hasil=$(echo "scale=2; ($suhu - 32) * 4/9" | bc) ;; # Fahrenheit ke Reamur
+            1) hasil=$(echo "scale=2; ($suhu - 32) * 5/9" | bc) ;;
+            2) hasil=$suhu ;;
+            3) hasil=$(echo "scale=2; (($suhu - 32) * 5/9) + 273.15" | bc) ;;
+            4) hasil=$(echo "scale=2; ($suhu - 32) * 4/9" | bc) ;;
         esac
     elif [ "$asal" -eq 3 ]; then
-        # Dari Kelvin
         case "$tujuan" in
-            1) hasil=$(echo "scale=2; $suhu - 273.15" | bc) ;; # Kelvin ke Celsius
-            2) hasil=$(echo "scale=2; (($suhu - 273.15) * 9/5) + 32" | bc) ;; # Kelvin ke Fahrenheit
-            3) hasil=$suhu ;; # Kelvin ke Kelvin
-            4) hasil=$(echo "scale=2; ($suhu - 273.15) * 4/5" | bc) ;; # Kelvin ke Reamur
+            1) hasil=$(echo "scale=2; $suhu - 273.15" | bc) ;;
+            2) hasil=$(echo "scale=2; (($suhu - 273.15) * 9/5) + 32" | bc) ;;
+            3) hasil=$suhu ;;
+            4) hasil=$(echo "scale=2; ($suhu - 273.15) * 4/5" | bc) ;;
         esac
     elif [ "$asal" -eq 4 ]; then
-        # Dari Reamur
         case "$tujuan" in
-            1) hasil=$(echo "scale=2; $suhu * 5/4" | bc) ;; # Reamur ke Celsius
-            2) hasil=$(echo "scale=2; (($suhu * 9/4) + 32)" | bc) ;; # Reamur ke Fahrenheit
-            3) hasil=$(echo "scale=2; ($suhu * 5/4) + 273.15" | bc) ;; # Reamur ke Kelvin
-            4) hasil=$suhu ;; # Reamur ke Reamur
+            1) hasil=$(echo "scale=2; $suhu * 5/4" | bc) ;;
+            2) hasil=$(echo "scale=2; (($suhu * 9/4) + 32)" | bc) ;;
+            3) hasil=$(echo "scale=2; ($suhu * 5/4) + 273.15" | bc) ;;
+            4) hasil=$suhu ;;
         esac
     else
         echo "Pilihan satuan asal tidak valid."
@@ -194,30 +228,31 @@ menghitungLuasVolume() {
     fi
 }
 
-# Fungsi untuk konversi mata uang
-konversiMataUang() {
-    echo "Masukkan jumlah uang dalam Rupiah:"
-    read rupiah
-    echo "Masukkan nilai tukar (contoh: 15000 untuk USD):"
-    read nilai_tukar
-    hasil=$(echo "scale=2; $rupiah / $nilai_tukar" | bc)
-    echo "Hasil konversi: $hasil dalam mata uang asing."
-}
+# Fungsi untuk menghitung IPK
+menghitungIPK() {
 
-hitungKalori() {
-    echo "Masukkan nama makanan:"
-    read makanan
-    
-    echo "Masukkan jumlah makanan (dalam gram):"
-    read jumlah
-    
-    echo "Masukkan nilai kalori per 100 gram (dalam kalori):"
-    read kalori_per_100g
-    
-    # Menghitung total kalori
-    total_kalori=$(( (jumlah * kalori_per_100g) / 100 ))
-    
-    echo "Anda telah mengonsumsi $total_kalori kalori dari $jumlah gram $makanan."
+    echo "Masukkan jumlah IPS uang akan dimasukkan: "
+    read jumlah_ips
+
+    ips=()
+    for (( ipsMasuk=1; ipsMasuk<=$jumlah_ips; ipsMasuk++ ))
+    do
+        echo "Masukkan IPS ke-$ipsMasuk: "
+        read ip
+        ips+=($ip)
+    done
+
+    jumlahTotalIps=0
+
+    for nilaiIps in "${ips[@]}"
+    do
+        jumlahTotalIps=$(echo "scale=2; $jumlahTotalIps + $nilaiIps" | bc)
+    done
+
+    ipk=$(echo "scale=2; $jumlahTotalIps / $jumlah_ips" | bc)
+
+    echo "IPK anda: $jumlahTotalIps / $jumlah_ips"
+    echo "IPK Anda adalah $ipk"
 }
 
 # Menu utama
@@ -226,8 +261,7 @@ echo "1. Manipulasi hak akses"
 echo "2. Membuka aplikasi"
 echo "3. Kalkulator suhu"
 echo "4. Menghitung luas bangun datar"
-echo "5. Konversi mata uang"
-echo "6. Menghitung kalori"
+echo "5. Menghitung IPK"
 
 read pilihan
 
@@ -241,9 +275,7 @@ elif [ "$pilihan" -eq 3 ]; then
 elif [ "$pilihan" -eq 4 ]; then
     menghitungLuasVolume
 elif [ "$pilihan" -eq 5 ]; then
-    konversiMataUang
-elif [ "$pilihan" -eq 6 ]; then
-    hitungKalori
+    menghitungIPK
 else
     echo "Pilihan tidak valid."
 fi
