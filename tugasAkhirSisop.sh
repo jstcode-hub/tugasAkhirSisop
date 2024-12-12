@@ -255,6 +255,41 @@ menghitungIPK() {
     echo "IPK Anda adalah $ipk"
 }
 
+calculate_calories() {
+    local total_calories=0
+
+    while true; do
+        echo "Masukkan nama makanan (atau ketik 'selesai' untuk keluar):"
+        read food_name
+
+        if [[ "$food_name" == "selesai" ]]; then
+            break
+        fi
+
+        echo "Masukkan jumlah kalori untuk $food_name (kalori per porsi):"
+        read calories
+
+        # Validasi input
+        if ! [[ "$calories" =~ ^[0-9]+$ ]]; then
+            echo "Masukkan jumlah kalori yang valid (angka saja)."
+            continue
+        fi
+
+        echo "Masukkan jumlah porsi $food_name yang Anda konsumsi:"
+        read servings
+
+        if ! [[ "$servings" =~ ^[0-9]+$ ]]; then
+            echo "Masukkan jumlah porsi yang valid (angka saja)."
+            continue
+        fi
+
+        # Hitung kalori untuk makanan ini dan tambahkan ke total
+        total_calories=$((total_calories + calories * servings))
+    done
+
+    echo "Total kalori yang Anda konsumsi hari ini: $total_calories kalori"
+}
+
 # Menu utama
 echo "Pilih program yang mau dijalankan:"
 echo "1. Manipulasi hak akses"
@@ -262,6 +297,7 @@ echo "2. Membuka aplikasi"
 echo "3. Kalkulator suhu"
 echo "4. Menghitung luas bangun datar"
 echo "5. Menghitung IPK"
+echo "6. Menghitung kalori"
 
 read pilihan
 
@@ -276,6 +312,8 @@ elif [ "$pilihan" -eq 4 ]; then
     menghitungLuasVolume
 elif [ "$pilihan" -eq 5 ]; then
     menghitungIPK
+elif [ "$pilihan" -eq 6 ]; then
+    calculate_calories
 else
     echo "Pilihan tidak valid."
 fi
